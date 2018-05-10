@@ -5,18 +5,17 @@ import RssForm from './RssForm';
 
 export default class State extends Component {
 
-  state = { linksList: [] };
+  state = { rssData: [] };
 
-  handleOnSubmit = (value) => {
-    const linksList = [value, ...this.state.linksList];
-    this.setState({ linksList });
-    console.log(this.state);
+  handleOnSubmit = (data) => {
+    const rssData = [data, ...this.state.rssData];
+    this.setState({ rssData });
   }
 
   render() {
     return <div>
       <RssForm onSubmit={this.handleOnSubmit}/>
-      <FeedList links={this.state.linksList}/>
+      <FeedList feeds={this.state.rssData}/>
     </div>
 
   }

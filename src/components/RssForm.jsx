@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { Jumbotron, FormGroup, ControlLabel, FormControl, HelpBlock, Button } from 'react-bootstrap';
-import isEmail from 'validator/lib/isEmail';
+import isURL from 'validator/lib/isURL';
 import cn from 'classnames';
+import axios from 'axios';
 
 import FeedList from './FeedList';
 
@@ -9,16 +10,27 @@ export default class RssForm extends Component {
 
   state = { rssLink: '', formState: 'neutral' };
 
+  proxy = 'https://cors-anywhere.herokuapp.com';
+
   handleOnChange = (e) => {
     const value = e.target.value;
     this.setState({ rssLink: value });
   }
 
-  handleOnSubmit = (e) => {
+  handleOnSubmit = async (e) => {
     e.preventDefault();
     if (this.isValidInput()) {
-      this.props.onSubmit(this.state.rssLink);
+      const value = this.state.rssLink;
       this.setState({ rssLink: '', formState: 'valid' });
+      const requestUrl = `${this.proxy}/${value}`;
+      try {
+        const rssData = await axios.get(requestUrl);
+        const parsedRss = this.parseRssData(rssData.data);
+        const convertedData = this.convertParsedData(parsedRss);
+        this.props.onSubmit(convertedData);
+      } catch (e) {
+        this.setState({ formState: 'invalid' });
+        }
     } else {
       this.setState({ formState: 'invalid' });
     }
@@ -26,11 +38,38 @@ export default class RssForm extends Component {
 
   isValidInput = () => {
     const value = this.state.rssLink;
-    return isEmail(value);
+    return isURL(value);
+  }
+
+  parseRssData = (data) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(data, 'application/xml');
+    return doc;
+  }
+
+  convertParsedData = (data) => {
+    const feedName = data.querySelector('title').textContent;
+    const feedLink = data.querySelector('link').textContent;
+    const newsItems = [...data.querySelectorAll('item')];
+    const preparedNews = newsItems.map((item) => {
+      const guid = item.querySelector('guid');
+      const title = item.querySelector('title');
+      const link = item.querySelector('link');
+      const desc = item.querySelector('description');
+      return guid && title && link && desc ?
+        {
+                  guid: guid.textContent,
+                  title: title.textContent,
+                  link: link.textContent,
+                  desc: desc.textContent,
+
+        } : null;
+
+    }).filter(item => !!item);
+    return ({ feedName, feedLink, news: preparedNews });
   }
 
   render() {
-
     const validatorClass = cn({
       "has-error": this.state.formState === 'invalid',
       "has-success": this.state.formState === 'valid',
