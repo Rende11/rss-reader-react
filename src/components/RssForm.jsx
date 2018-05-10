@@ -16,30 +16,38 @@ export default class RssForm extends Component {
 
   handleOnSubmit = (e) => {
     e.preventDefault();
-    this.setValidationForm();
-    this.props.onSubmit(this.state.rssLink);
-    this.setState({ rssLink: '' })
+    if (this.isValidInput()) {
+      this.props.onSubmit(this.state.rssLink);
+      this.setState({ rssLink: '', formState: 'valid' });
+    } else {
+      this.setState({ formState: 'invalid' });
+    }
   }
 
-  setValidationForm = () => {
+  isValidInput = () => {
     const value = this.state.rssLink;
-    const result =  isEmail(value) ? 'valid' : 'invalid';
-    this.setState({ formState: result });
+    return isEmail(value);
   }
-
 
   render() {
+
     const validatorClass = cn({
       "has-error": this.state.formState === 'invalid',
       "has-success": this.state.formState === 'valid',
       "": this.state.formState === 'neutral',
     });
 
+    const helpMessages = {
+      "invalid": "Invalid or already used URL",
+      "valid": "Looks good, please wait",
+      "": ""
+    }
     return  <Jumbotron>
       <h1> Hello RSS </h1>
       <form onSubmit={this.handleOnSubmit}>
           <div className={validatorClass}>
             <FormControl type="text" name="rssLink" onChange={this.handleOnChange} placeholder="input link with rss" value={this.state.rssLink}/>
+            <span className="help-block">{helpMessages[this.state.formState]}</span>
           </div>
           <HelpBlock>Enter a valid RSS URL</HelpBlock>
         <Button type="submit" bsStyle="info">Submit</Button>
