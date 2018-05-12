@@ -31,6 +31,7 @@ export default class RssForm extends Component {
         this.setState({ formState: 'neutral' });
       } catch (e) {
         this.setState({ formState: 'invalid' });
+        console.error(e);
         }
     } else {
       this.setState({ formState: 'invalid' });

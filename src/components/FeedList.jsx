@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { ListGroup, ListGroupItem, Col } from 'react-bootstrap';
+import { ListGroup, ListGroupItem, Col, Button } from 'react-bootstrap';
 import uuid from 'uuid/v1';
 
 export default class FeedList extends Component {
@@ -8,7 +8,8 @@ export default class FeedList extends Component {
   renderFeedNews = (feed) => {
     return  (
       [<ListGroupItem href={feed.feedLink} active key={uuid()}>{feed.feedName}</ListGroupItem>]
-        .concat(feed.news.map(newsItem => <ListGroupItem key={uuid()} href={newsItem.link}>{newsItem.title}</ListGroupItem>))
+      .concat(feed.news.map(newsItem => <ListGroupItem key={uuid()} href={newsItem.link}>{newsItem.title}
+      <span className="pull-right vcenter"><Button bsSize="sm" bsStyle="xs">Show description</Button></span></ListGroupItem>))
     )
   }
 
