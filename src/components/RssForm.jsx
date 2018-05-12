@@ -28,6 +28,7 @@ export default class RssForm extends Component {
         const parsedRss = this.parseRssData(rssData.data);
         const convertedData = this.convertParsedData(parsedRss);
         this.props.onSubmit(convertedData);
+        this.setState({ formState: 'neutral' });
       } catch (e) {
         this.setState({ formState: 'invalid' });
         }
