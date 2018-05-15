@@ -6,25 +6,17 @@ import Modal from './RssModal';
 
 export default class State extends Component {
 
-  state = { rssData: [], isModalOpen: false };
+  state = { rssData: [] };
 
   handleOnSubmit = (data) => {
     const rssData = [data, ...this.state.rssData];
     this.setState({ rssData });
   }
 
-  openModal = () => {
-    this.setState({ isModalOpen: true });
-  }
-
-  closeModal = () => {
-    this.setState({ isModalOpen: false });
-  }
   render() {
     return <div>
       <RssForm onSubmit={this.handleOnSubmit}/>
-      <Modal isOpen={this.state.isModalOpen} close={this.closeModal}/>
-      <FeedList feeds={this.state.rssData} openModal={this.openModal}/>
+      <FeedList feeds={this.state.rssData}/>
     </div>
   }
 

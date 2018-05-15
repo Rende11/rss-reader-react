@@ -4,11 +4,19 @@ import uuid from 'uuid/v1';
 
 import Modal from './RssModal';
 
+
 export default class FeedList extends Component {
+
+
+  state = { isModalOpen: false, modalData: {}};
 
   handleShow = (data) => (e) => {
     e.preventDefault();
-    this.props.openModal(data);
+    this.setState({ isModalOpen: true, modalData: data });
+  }
+
+  handleClose = e => {
+    this.setState({ isModalOpen: false });
   }
 
   renderFeedNews = (feed) => {
@@ -21,7 +29,8 @@ export default class FeedList extends Component {
 
   render() {
     return (
-      <Col md={8} mdOffset={2}>
+      <Col md={9} mdOffset={2}>
+        <Modal data={this.state.modalData} isOpen={this.state.isModalOpen} handleClose={this.handleClose}/>
         {this.props.feeds.map(newsFeed => <ListGroup key={uuid()}>{this.renderFeedNews(newsFeed)}</ListGroup>)}
       </Col>
     );
