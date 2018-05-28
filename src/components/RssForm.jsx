@@ -1,16 +1,17 @@
 import React, { Component } from 'react';
-import { Jumbotron, FormGroup, ControlLabel, FormControl, HelpBlock, Button } from 'react-bootstrap';
+import { Jumbotron, FormControl, HelpBlock, Button } from 'react-bootstrap';
 import isURL from 'validator/lib/isURL';
 import cn from 'classnames';
 import axios from 'axios';
+import _ from 'lodash';
 
-import FeedList from './FeedList';
 
 export default class RssForm extends Component {
 
   state = { rssLink: '', formState: 'neutral' };
 
   proxy = 'https://cors-anywhere.herokuapp.com';
+
 
   handleOnChange = (e) => {
     const value = e.target.value;
@@ -20,14 +21,11 @@ export default class RssForm extends Component {
   handleOnSubmit = async (e) => {
     e.preventDefault();
     if (this.isValidInput()) {
-      const value = this.state.rssLink;
+      const rssLink = this.state.rssLink;
       this.setState({ rssLink: '', formState: 'valid' });
-      const requestUrl = `${this.proxy}/${value}`;
       try {
-        const rssData = await axios.get(requestUrl);
-        const parsedRss = this.parseRssData(rssData.data);
-        const convertedData = this.convertParsedData(parsedRss);
-        this.props.onSubmit(convertedData);
+        const dataWithOriginalUrl = await this.getAndParseDataFromUrl(rssLink);
+        this.props.onSubmit(dataWithOriginalUrl);
         this.setState({ formState: 'neutral' });
       } catch (e) {
         this.setState({ formState: 'invalid' });
@@ -38,9 +36,25 @@ export default class RssForm extends Component {
     }
   }
 
+  getNewData = async (rssdata) => {
+    const rsslinks = rssdata.map(feed => feed.rssLink);
+    const newdata = rsslinks.map(async link => await this.getAndParseDataFromUrl(link));
+    return newdata;
+  }
+
   isValidInput = () => {
     const value = this.state.rssLink;
-    return isURL(value);
+    const links = this.props.feeds.map(feed => feed.rssLink);
+    return isURL(value) && !links.includes(value);
+  }
+
+  getAndParseDataFromUrl = async (rssLink) => {
+    const requestUrl = `${this.proxy}/${rssLink}`;
+    const rssData = await axios.get(requestUrl);
+    const parsedRss = this.parseRssData(rssData.data);
+    const convertedData = this.convertParsedData(parsedRss);
+    const dataWithOriginalUrl = { ...convertedData, rssLink };
+    return dataWithOriginalUrl;
   }
 
   parseRssData = (data) => {
@@ -71,6 +85,33 @@ export default class RssForm extends Component {
     return ({ feedName, feedLink, news: preparedNews });
   }
 
+  handleRefresh = async () => {
+    const feeds = this.props.feeds;
+    const actualData = await this.getNewData(feeds);
+    const feedsWithNewArticles = Promise.all(actualData)
+      .then(actualData => actualData
+        .map(newFeed => {
+          const oldFeed = _.find(feeds, oldFeedItem => oldFeedItem.rssLink === newFeed.rssLink);
+          const newArticles = _.differenceWith(newFeed.news, oldFeed.news, (first, second) => first.guid === second.guid);
+          return { ...newFeed, news: newArticles };
+          }));
+    this.props.handleUpdate(await feedsWithNewArticles);
+  }
+
+  cycleUpdate = async () => {
+    try {
+      await  this.handleRefresh();
+      setTimeout(this.cycleUpdate, 5000);
+    } catch (err) {
+      console.error(err);
+      setTimeout(this.cycleUpdate, 20000);
+    }
+  }
+
+  async componentWillMount() {
+    await this.cycleUpdate();
+  }
+
   render() {
     const validatorClass = cn({
       "has-error": this.state.formState === 'invalid',
@@ -84,14 +125,14 @@ export default class RssForm extends Component {
       "": ""
     }
     return  <Jumbotron>
-      <h1> Hello RSS </h1>
+      <h1>RSS Feed Reader</h1>
       <form onSubmit={this.handleOnSubmit}>
           <div className={validatorClass}>
             <FormControl type="text" name="rssLink" onChange={this.handleOnChange} placeholder="input link with rss" value={this.state.rssLink}/>
             <span className="help-block">{helpMessages[this.state.formState]}</span>
           </div>
           <HelpBlock>Enter a valid RSS URL</HelpBlock>
-        <Button type="submit" bsStyle="info">Submit</Button>
+          <Button type="submit" bsStyle="info">Submit</Button>
       </form>
     </Jumbotron>
   }

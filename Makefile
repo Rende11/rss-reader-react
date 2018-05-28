@@ -15,4 +15,4 @@ lint:
 lint-fix:
 	npm run lint -- --fix
 
-.PHONY: test
+.PHONY: test, build

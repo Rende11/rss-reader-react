@@ -22,9 +22,11 @@ export default class FeedList extends Component {
   renderFeedNews = (feed) => {
     return  (
       [<ListGroupItem href={feed.feedLink} active key={uuid()}>{feed.feedName}</ListGroupItem>]
-      .concat(feed.news.map(newsItem => <ListGroupItem key={uuid()} href={newsItem.link}>{newsItem.title}
-      <span className="pull-right"><Button onClick={this.handleShow(newsItem)} bsSize="xs" bsStyle="link">Show description</Button></span></ListGroupItem>))
-    )
+        .concat(feed.news.map(newsItem => <ListGroupItem key={uuid()} href={newsItem.link}>{newsItem.title}
+        <span className="pull-right">
+          <Button onClick={this.handleShow(newsItem)} bsSize="xs" bsStyle="link">Show description</Button>
+        </span>
+      </ListGroupItem>)))
   }
 
   render() {
